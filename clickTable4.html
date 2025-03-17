@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-Konten Gewinn- und Verlustrechnung</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        thead, tfoot {
+            background-color: #f2f2f2;
+        }
+
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            }
+    </style>
+</head>
+<body>
+    <h2>Gewinn- und Verlust-Bilanz</h2>
+
+
+    <table>
+        <thead>
+            <tr>
+                <th>SOLL-Position</th> <!--Column 0-->
+                <th>Betrag</th> <!--Column 1-->
+                <th>HABEN-Position</th> <!--Column 2-->
+                <th>Betrag</th> <!--Column 3-->
+            </tr>
+        </thead>
+        <tbody id="konto-body">
+            <!-- Dynamische Zeilen werden hier eingefügt -->
+
+        
+
+            <tr> <!--New Row-->
+                <td> <!--New Data - Column 0: S Position-->
+                    <ul id="posOne">
+                        
+                    </ul>
+                </td>
+
+                <td> <!--New Data - Column 1: S Betrag-->
+                    <ul id="posTwo">
+                        
+                    </ul>
+                </td>
+
+                <td> <!--New Data - Column 2: H Position-->
+                    <ul id="posThree">
+                        
+                    </ul>
+                </td>
+
+                <td> <!--New Data - Column 3: H Betrag-->
+                    <ul id="posFour">
+                       
+                    </ul>
+                </td>
+
+                
+
+            </tr>
+
+          
+
+        </tbody>
+        <tfoot>
+            <tr>
+                <td>Summe</td>
+                <td id="sum-soll">0</td>
+                <td>Summe</td>
+                <td id="sum-haben">0</td>
+            </tr>
+        </tfoot>
+    </table>
+    
+
+
+    <h3>Gewinn/Verlust:</h3>
+    <p id="profit-loss">0</p>
+    
+    <script>
+        
+        function loadTableData () { //function gets called by pressing Button in index
+
+            
+            
+            
+
+            const savedMoney = sessionStorage.getItem("sellValue"); //Getting data from sessionStorage with key=money
+
+            const spentMoney = sessionStorage.getItem("itemCost");
+
+            const workPlace = sessionStorage.getItem("itemId");
+
+            console.log("savedMoney", savedMoney);
+
+            if (savedMoney) { //if savedMoney has value then..
+                const sollPos = document.createElement("li"); //Position S -> Liste 0
+                const sollAmount = document.createElement("li"); //Betrag S -> Liste 1
+
+                    sollPos.textContent = "Verkauf";
+                    sollAmount.textContent = savedMoney;
+
+                    document.getElementById("posOne").appendChild(sollPos);
+                    document.getElementById("posTwo").appendChild(sollAmount);
+
+                    sessionStorage.removeItem("sellValue"); //..clear the moey-storage
+                
+            } 
+
+            if (spentMoney) {
+                const habenPos = document.createElement("li"); //Position H -> Liste 2
+                const habenAmount = document.createElement("li"); //Position H -> Liste 3
+
+                    habenPos.textContent = `Kauf AP Nr.: ${workPlace}`;
+                    habenAmount.textContent = spentMoney;
+
+                    document.getElementById("posThree").appendChild(habenPos);
+                    document.getElementById("posFour").appendChild(habenAmount);
+
+                    sessionStorage.removeItem("itemCost");
+
+                    sessionStorage.removeItem("itemId");
+
+            }
+            
+            updateSums();
+
+            
+            
+
+            };
+
+        
+        
+        function updateSums() {
+            let sumSoll = 0;
+            let sumHaben = 0;
+
+            document.querySelectorAll("#posTwo li").forEach(li => {
+                const value = parseFloat(li.textContent);
+                sumSoll += value;
+
+            });
+
+            document.querySelectorAll("#posFour li").forEach(li => {
+                const value = parseFloat(li.textContent);
+                sumHaben += value;
+
+            });
+            
+            document.getElementById("sum-soll").textContent = sumSoll; //push the result of sumSoll to the html-id summ-soll
+            document.getElementById("sum-haben").textContent = sumHaben; //same with haben
+            document.getElementById("profit-loss").textContent = `${sumSoll - sumHaben}`;
+        }
+    </script>
+</body>
+</html>
