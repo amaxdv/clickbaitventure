@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBA 1</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: "Pixelify Sans", sans-serif;
+            text-align: center;
+
+            font-size: 20px;
+            
+        }
+
+
+        button {
+            font-size: 20px;
+            padding: 20px;
+            margin: 20px;
+
+            border-radius: 8px;
+            box-shadow: 6px 9px 16px -9px rgba(0,0,0,0.62);
+
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: rgba(214, 214, 214, 0.959);
+            transform: translateY(4px);
+        }
+
+        #wpContainer {
+            display: flex;
+            flex-direction: column;
+            margin-left: 25%;
+            margin-right: 25%;
+            
+        }
+
+        /*Workplace-Div*/
+        .workplace {
+            display: flex;
+            align-items: center;
+            border: 2px solid #333;
+            background-color: #f4f4f4;
+            padding: 10px;
+            margin: 10px 0;
+            
+            
+            border-radius: 8px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .workplace button {
+            margin-right: 10px;       /* Abstand zwischen Button und Text */
+        }
+
+        .workplace-info {
+            text-align: left;
+            font-size: 20px;
+            margin-left: 20px;
+            line-height: 10px;
+
+            
+        }
+
+        .highlight {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .header {
+            padding: 10px;
+            text-align: center;
+            background: #517d8f;
+            color: white;
+            
+        }
+
+        .selectable {
+            border: 2px dashed orange;
+            cursor: pointer;
+        }        
+
+        /* Modal-Styling */
+        .modal {
+            display: none; /* Standardmäßig versteckt */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        /* Inhalt des Modals */
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 10px;
+            position: relative;
+
+            animation-name: animatetop;
+            animation-duration: 0.4s
+        }
+
+        /* Add Animation */
+            @keyframes animatetop {
+            from {top: -300px; opacity: 0}
+            to {top: 0; opacity: 1}
+            }
+
+        /* Schließen-Button */
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* Iframe für die externe Tabelle */
+        iframe {
+            width: 100%;
+            height: 400px;
+            border: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Clickbaitventure</h1>
+
+        <p>Geld: <span class="highlight" id="moneyCount">0</span> €   |    <!--Displays the actual amount of clicks-->
+        
+        Klicks: <span class="highlight" id="clickCount">0</span></p> <!--Displays the actual amount of money-->
+
+       
+    </div>
+
+    <!--Game Area-->
+
+</br>
+        
+        <!--Workplaces-->
+        <div id="wpContainer"></div>
+
+        <!--Game-Buttons-->
+        <button onclick="buyWorkplace()">Arbeitsplatz kaufen</button>
+        <button onclick="automateWp()">Mitarbeiter einsellen</button>
+        
+        <button onclick="sellClicks()">Clicks verkaufen</button>
+        <button onclick="openSite()">Shop besuchen</button>
+
+
+        <!--Arbeitsplatz-Kosten: <span id="wpCosts"></span> € |-->
+        <p>Aktueller Verkaufswert: <span id="exchange"></span> €/Click</p>
+
+        <!-- Das Modal (versteckt sich standardmäßig) -->
+            <div id="tableModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeSite()">&times;</span>
+                    <iframe id="tableFrame" src="clickTable5.html"></iframe>
+                </div>
+            </div>
+
+    <!--Script Area-->
+    <script>
+
+    //Global Variables
+    let clicks = 0;
+    let money = 1.00;
+    let exRate = 0.032;
+
+    const modal = document.getElementById("tableModal");
+        const modalIframeIncome = document.getElementById("tableFrame");
+
+    function ensureIframeLoaded(callback) { //Sicherstellen, dass modal geladen wird -> kann ggf. weg, wenn keine Test-Workplace in buttons[] geladen werden.
+        if (modalIframeIncome.contentWindow && modalIframeIncome.contentWindow.loadTableData) {
+            callback(); // Iframe ist bereit, Funktion direkt ausführen
+        } else {
+            console.log("Iframe noch nicht bereit, warte...");
+            setTimeout(() => ensureIframeLoaded(callback), 100); // Nochmal nach 100ms prüfen
+        }
+    }
+    
+    window.onload = function () { //Sicherstellen, dass modal frühzeitig geladen wird -> ggf. entfernen
+        modal.style.display = "none"; // Modal unsichtbar laden
+
+        ensureIframeLoaded(() => {
+            console.log("Iframe ist jetzt bereit.");
+            modalIframeIncome.contentWindow.loadTableData(); // Erst ausführen, wenn Iframe bereit ist
+        });
+    };
+
+    function sellClicks () {
+        let sellValue = 0;
+
+        if (clicks > 0) {
+
+            sellValue = clicks * exRate;
+            
+            money = money + sellValue;
+            
+            moneyCountDisplay.textContent = Number(money).toFixed(2); //Showing just 3 decimal places
+            sessionStorage.setItem("clickAmount", clicks);
+            clicks = 0;
+            clickCountDisplay.textContent = clicks;
+
+            console.log("Geld:", money);
+
+            //Storgae for Tabele (SOLL)
+                
+                sessionStorage.setItem("sellValue", sellValue); //saving Amount für clickTable
+
+                console.log("storage Verkauf:", sellValue);
+
+                modalIframeIncome.contentWindow.loadTableData(); //verstehe ich noch nicht ganz -> führt jedenfalls loadTableData in anderer Datei aus, wenn openSite gecalled wird.
+
+            console.log("Storage auf:", sessionStorage.getItem("sellValue"));
+            } else {
+                alert("Sry Bro, du hast keine Klicks!")
+                }
+    }
+
+    function buyWorkplace () {
+        
+        if(money > Workplace.costs) {
+            let newbuttonId = buttons.length; //Generates a new Id from the number of Objects in buttons-array 
+            buttons.push(new Workplace (newbuttonId, 3, false)); //pushes a new instance of workplace in buttons-array (incl. static cooldown)
+            
+            money = money - Workplace.costs; //decrease money by costs
+            moneyCountDisplay.textContent = Number(money).toFixed(2); //update money display
+
+                //Storage for Table (HABEN)
+                sessionStorage.setItem("itemCost", Workplace.costs);
+
+                sessionStorage.setItem("itemId", newbuttonId);
+
+                //Daten an Table schicken -> verschoben in openSite
+                //const modalIframeCosts = document.getElementById("tableFrame");
+                modalIframeIncome.contentWindow.loadTableData();
+                
+                //loadModal();
+
+
+        } else {
+            alert("Sry Bro, zu wenig Geld!");
+        }
+    }
+
+    function automateWp () {
+
+        if (buttons.length === 0) {
+        console.log("Kein Arbeitsplatz vorhanden");
+        return;
+        }
+
+        console.log("Klicke auf einen Arbeitsplatz, um ihn zu automatisieren.");
+        selectingAutomation = true; // Auswahlmodus aktivieren
+
+        // Event Listener für alle nicht automatisierten Arbeitsplätze hinzufügen
+        buttons.forEach(workplace => {
+            if (!workplace.auto) {
+                workplace.containerDiv.addEventListener("click", handleAutomationSelection);
+                workplace.containerDiv.classList.add("selectable"); // Optional: Visuelles Feedback
+            }
+        });
+
+    }
+
+    // Diese Funktion wird aufgerufen, wenn ein Arbeitsplatz im Auswahlmodus angeklickt wird
+    function handleAutomationSelection(event) {
+        if (!selectingAutomation) return; // Falls der Modus nicht aktiv ist, ignorieren
+
+        let selectedWorkplace = buttons.find(wp => wp.containerDiv === event.currentTarget);
+        
+        if (selectedWorkplace && !selectedWorkplace.auto) {
+            selectedWorkplace.assignEmployee(); // Arbeitsplatz automatisieren
+            console.log(`Arbeitsplatz ${selectedWorkplace.id} wurde automatisiert.`);
+
+            // Auswahlmodus beenden & Event Listener entfernen
+            selectingAutomation = false;
+            buttons.forEach(wp => {
+                wp.containerDiv.removeEventListener("click", handleAutomationSelection);
+                wp.containerDiv.classList.remove("selectable"); // Optional: Visuelles Feedback entfernen
+            });
+        }
+    }
+
+    function openSite () {
+        document.getElementById("tableModal").style.display = "block";
+        
+    }
+
+    function closeSite () {
+        document.getElementById("tableModal").style.display = "none";
+
+    }
+
+    //++Display Elements++
+    //++Actual amount of clicks++
+    const clickCountDisplay = document.getElementById("clickCount");
+    clickCountDisplay.textContent = clicks;
+    
+    //++Actual amount of money++
+    const moneyCountDisplay = document.getElementById("moneyCount"); 
+    moneyCountDisplay.textContent = money;
+
+    //++Actual Exchange Rate of Clicks++
+    const exrateDisplay = document.getElementById("exchange");
+    exrateDisplay.textContent = exRate;
+
+    //++Workplace-Class: Generates Divs with Buttons and Attributes with effects on the Click-Productivity++
+        class Workplace {
+            static costs = 0.1;
+            constructor(id, cooldown, auto) {
+                
+                //Control-Parameters
+                this.id = id;
+                this.buttonLevel = 1;
+                this.timeLeft = cooldown;
+                this.auto = auto;
+
+                //Attributes
+                this.clickConversion = 1.0;
+                this.cooldown = cooldown;
+                this.clickValue = 0.0332;
+                this.multi = 2.0;
+                this.multiChance = 0.1;
+                this.runCostWp = 0.99; //lfd. Kosten Arbeitsplatz
+
+                //Generate the Div-Container für Button and Attributes
+                this.createDiv();
+                
+            }
+
+            createDiv() {
+                //++Container for Workplace Components (Button + Info)++
+                this.containerDiv = document.createElement("div"); //creates a div called containerDiv
+                this.containerDiv.classList.add("workplace"); //assigns the CSS workplace-class to containerDiv
+              
+                document.getElementById("wpContainer").appendChild(this.containerDiv); //Assigns Container to HTML-Div
+
+                    //++Button++
+                    this.wpButton = document.createElement("button"); //Building a Button-Eelement called wpButton
+                    this.wpButton.addEventListener("click", () => this.handleClick()); //Gives wpButton the class-function to call
+                    
+                    this.containerDiv.appendChild(this.wpButton); //Assings Button to Container
+                    
+                    this.updateButText();
+
+                    //++Info++
+                    this.infoDiv = document.createElement("div");  //creates another div for the Attributes
+                    this.infoDiv.classList.add("workplace-info"); //assigns a dedicated CSS-Class
+                   
+                    this.containerDiv.appendChild(this.infoDiv); //Assigns Info to Container
+
+                    this.updateInfoDiv(); //calls Function to write actual Values in Info
+
+                    this.sendRunCosts();
+            
+            }
+
+            sendRunCosts () {
+                let newbuttonId = buttons.length; 
+
+                sessionStorage.setItem("itemId", newbuttonId);
+                
+                sessionStorage.setItem("runCostWp", this.runCostWp);
+                
+                console.log("miau");
+
+                ensureIframeLoaded(() => {
+        modalIframeIncome.contentWindow.loadTableData();
+    });
+
+            }
+
+            updateButText () {
+                this.wpButton.textContent = `Arbeitsplatz: ${this.id} (${this.timeLeft} sek.)`; //Gives wpButton Text-Content
+            }
+
+            updateInfoDiv () {
+                this.infoDiv.innerHTML = `
+                    <p>Level: <span class="highlight">${this.buttonLevel}</span></p>
+                    <p>Automated: <span class="highlight">${this.auto}</span></p>
+                    <p>Kosten: <span class="highlight">${Workplace.costs} €</span></p>
+                    <p>Lfd. Kosten: <span class="highlight">${this.runCostWp} €</span></p>
+                    
+                `;
+
+                //<p>Cooldown: <span class="highlight">${this.cooldown}Sek.</span></p>
+                //<p>Multi: <span class="highlight">${this.multi} x</span></p>
+                //<p>Multi-Chance: <span class="highlight">${this.multiChance} %</span></p>
+                
+            }
+
+            handleClick() {
+               
+                //++Adding Clicks++
+                clicks++; //adding 1 to clicks
+                clickCountDisplay.textContent = clicks; //Update the display for clicks
+
+                //++Control the Cooldwon++
+                this.wpButton.disabled = true; //disable the Button
+
+                //++setting Interval: every 1000 ms:++
+                const timer = setInterval(() => { 
+                    this.timeLeft--; //substract 1 from disabled Time window (countdown)
+
+                    this.updateButText();
+
+                    if (this.timeLeft <= 0) { //if the countdown is 0, then..
+                        clearInterval(timer); //reset Timer..
+                        this.wpButton.disabled = false; //enable the button again..
+                        this.timeLeft = this.cooldown; //reset the cooldown
+                        
+                        this.updateButText();
+                    
+                        //++Control the Automation++
+                        if (this.auto == true) { //if the "auto"-property is true, then..
+                            this.handleClick(); //calling the function again
+                        }
+                    } 
+                }, 1000);
+            }
+
+            assignEmployee() {
+                this.auto = true;
+                
+                this.updateInfoDiv();
+            }
+        }
+
+        // Drei Buttons mit individuellen Cooldown-Werten erstellen
+        const buttons = [
+            /*new Workplace(0, 3, false),
+            new Workplace(1, 3, false),
+            new Workplace(2, 3, false)*/
+        ];
+
+        console.log(buttons);
+
+        class Employee {
+            constructor(id) {
+                this.id = id;
+
+            }
+
+        }
+
+        const employees = [
+            new Employee(0)
+        ];
+
+        console.log(employees);
+
+    </script>
+
+</body>
+</html>
