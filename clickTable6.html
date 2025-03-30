@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-Konten Gewinn- und Verlustrechnung</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        thead, tfoot {
+            background-color: #f2f2f2;
+        }
+
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            }
+    </style>
+</head>
+<body>
+    <h2>Gewinn- und Verlust-Bilanz</h2>
+
+
+    <table>
+        <thead>
+            <tr>
+                <th>SOLL-Position</th> <!--Column 0-->
+                <th>Betrag</th> <!--Column 1-->
+                <th>HABEN-Position</th> <!--Column 2-->
+                <th>Betrag</th> <!--Column 3-->
+            </tr>
+        </thead>
+        <tbody id="konto-body">
+            <!-- Dynamische Zeilen werden hier eingefügt -->
+
+        
+
+            <tr> <!--New Row-->
+                <td> <!--New Data - Column 0: S Position-->
+                    <ul id="posOne">
+                        
+                    </ul>
+                </td>
+
+                <td> <!--New Data - Column 1: S Betrag-->
+                    <ul id="posTwo">
+                        <!--<li>10</li>
+                        <li>1</li>-->
+                    </ul>
+                </td>
+
+                <td> <!--New Data - Column 2: H Position-->
+                    <ul id="posThree">
+                        
+                    </ul>
+                </td>
+
+                <td> <!--New Data - Column 3: H Betrag-->
+                    <ul id="posFour">
+                        <!--<li>10</li>
+                        <li>2</li>-->
+                    </ul>
+                </td>
+
+                
+
+            </tr>
+
+          
+
+        </tbody>
+        <tfoot>
+            <tr>
+                <td>Summe</td>
+                <td id="sum-soll">0</td>
+                <td>Summe</td>
+                <td id="sum-haben">0</td>
+            </tr>
+        </tfoot>
+    </table>
+    
+
+
+    <h3>Gewinn/Verlust:</h3>
+    <p id="profit-loss">0</p>
+
+    
+    <button onclick="cashOut()">Auszahlung</button>
+
+    <h3>Shop Money:</h3>
+    <p id="earnings">0</p>
+    
+    <script>
+
+        let delta = 0;
+        let earnings = 0;
+
+
+        
+        function loadTableData () { //function gets called by pressing Button in index
+
+
+            const savedMoney = sessionStorage.getItem("sellValue"); //Getting data from sessionStorage with key=money
+
+            const clickAmount = sessionStorage.getItem("clickAmount");
+            
+            const spentMoney = sessionStorage.getItem("itemCost");
+
+            const workPlace = sessionStorage.getItem("wpId");
+            const runningCostsWp = sessionStorage.getItem("runCostWp");
+
+            const emPloyee = sessionStorage.getItem("emId");
+            const runningCostsEm = sessionStorage.getItem("runCostEm");
+
+            console.log("savedMoney", savedMoney);
+
+            writeTableData(savedMoney, clickAmount, spentMoney, workPlace, runningCostsWp, emPloyee, runningCostsEm);
+
+        
+        }
+
+
+        function writeTableData (savedMoney, clickAmount, spentMoney, workPlace, runningCostsWp, emPloyee, runningCostsEm) {
+
+            if (savedMoney) { //if savedMoney has value then..
+                const sollPos = document.createElement("li"); //Position S -> Liste 0
+                const sollAmount = document.createElement("li"); //Betrag S -> Liste 1
+
+                    sollPos.textContent = `Verkauf: ${clickAmount} Clicks`;
+                    sollAmount.textContent = savedMoney;
+
+                    document.getElementById("posOne").appendChild(sollPos);
+                    document.getElementById("posTwo").appendChild(sollAmount);
+
+                    sessionStorage.removeItem("clickAmount");
+                    sessionStorage.removeItem("sellValue"); //..clear the moey-storage
+                
+            } 
+
+            if (spentMoney) {
+                const habenPos = document.createElement("li"); //Position H -> Liste 2
+                const habenAmount = document.createElement("li"); //Position H -> Liste 3
+
+                    habenPos.textContent = `Kauf AP Nr.: ${workPlace}`;
+                    habenAmount.textContent = spentMoney;
+
+                    console.log(workPlace);
+
+                    document.getElementById("posThree").appendChild(habenPos);
+                    document.getElementById("posFour").appendChild(habenAmount);
+
+                    sessionStorage.removeItem("itemCost");
+
+                    sessionStorage.removeItem("itemId");
+
+            }
+
+            if (runningCostsWp) {
+                const habenPos = document.createElement("li"); //Position H -> Liste 2
+                const habenAmount = document.createElement("li"); //Position H -> Liste 3
+
+                    habenPos.textContent = `Lfd. Kosten AP Nr.: ${workPlace}`;
+                    habenAmount.textContent = runningCostsWp;
+
+                    document.getElementById("posThree").appendChild(habenPos);
+                    document.getElementById("posFour").appendChild(habenAmount);
+
+                    sessionStorage.removeItem("runCostWp");
+
+                    sessionStorage.removeItem("wpId");
+
+            } 
+
+            if (runningCostsEm) {
+                const habenPos = document.createElement("li"); //Position H -> Liste 2
+                const habenAmount = document.createElement("li"); //Position H -> Liste 3
+
+                    habenPos.textContent = `Lfd. Kosten MA Nr.: ${emPloyee}`;
+                    habenAmount.textContent = runningCostsEm;
+
+                    document.getElementById("posThree").appendChild(habenPos);
+                    document.getElementById("posFour").appendChild(habenAmount);
+
+                    sessionStorage.removeItem("runCostEm");
+
+                    sessionStorage.removeItem("emId");
+
+            } 
+            
+            updateSums();
+
+            
+            }
+
+        
+        function updateSums() {
+            let sumSoll = 0;
+            let sumHaben = 0;
+
+            
+
+            
+            document.querySelectorAll("#posTwo li").forEach(li => {
+                const value = parseFloat(li.textContent);
+                sumSoll += value;
+
+            });
+
+            document.querySelectorAll("#posFour li").forEach(li => {
+                const value = parseFloat(li.textContent);
+                sumHaben += value;
+
+            });
+
+            console.log("Test1", sumSoll);
+            console.log("Test2", sumHaben);
+            
+
+            delta = sumSoll - sumHaben;
+
+            console.log("Test3", delta);
+
+            //moneyCountDisplay.textContent = Number(money).toFixed(3); //Showing just 3 decimal places
+            
+            document.getElementById("sum-soll").textContent = Number(sumSoll).toFixed(2); //push the result of sumSoll to the html-id summ-soll
+            document.getElementById("sum-haben").textContent = Number(sumHaben).toFixed(2); //same with haben
+            //document.getElementById("profit-loss").textContent = `${sumSoll - sumHaben}`;
+            document.getElementById("profit-loss").textContent = Number(delta).toFixed(2);
+        }
+
+        function cashOut() {
+            earnings += delta; 
+
+            document.getElementById("earnings").textContent = Number(delta).toFixed(2);
+
+            delta -= delta;
+
+            console.log("Test4", delta)
+
+            //clear-Lists
+            document.getElementById("posOne").innerHTML = "";
+            document.getElementById("posTwo").innerHTML = "";
+            document.getElementById("posThree").innerHTML = "";
+            document.getElementById("posFour").innerHTML = "";
+
+            updateSums();
+
+        }
+    </script>
+</body>
+</html>
